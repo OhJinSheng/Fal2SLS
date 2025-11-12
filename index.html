@@ -456,7 +456,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Circuit Simulation - Offline</title>
+    <title>Circuit Simulation</title>
     <style>
         body {
             margin: 0;
@@ -464,61 +464,29 @@
             font-family: Arial, sans-serif;
             background-color: #f5f5f5;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-        }
         #circuitFrame {
             border: 2px solid #ccc;
             display: block;
             background-color: white;
-            border-radius: 8px;
         }
         p {
-            text-align: center;
-            font-size: 14px;
+            text-align: left;
+            font-size: 12px;
             color: #666;
-            margin-top: 15px;
-        }
-        .info {
-            background: #e8f4f8;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border-left: 4px solid #2196F3;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔌 Circuit Simulation</h1>
-        
-        <div class="info">
-            <strong>✅ Offline Package:</strong> This circuit runs completely offline. 
-            All Falstad simulator files are included in this package.
-        </div>
-       
-        <iframe id="circuitFrame" 
-                src="circuitjs.html?ctz=${currentCircuitData}&${params}"
-                width="100%" 
-                height="600">
-        </iframe>
-        
-        <p>Circuit Simulator by Paul Falstad | <a href="https://www.falstad.com/circuit" target="_blank">https://www.falstad.com/circuit</a></p>
-        
-        <div class="info">
-            <h3>Circuit Settings:</h3>
-            <ul>
-                <li>European Resistors: ${document.getElementById('euroResistors').checked ? 'Yes' : 'No'}</li>
-                <li>White Background: ${document.getElementById('whiteBackground').checked ? 'Yes' : 'No'}</li>
-                <li>Editable: ${document.getElementById('editable').checked ? 'Yes' : 'No'}</li>
-            </ul>
-        </div>
-    </div>
+   
+    <iframe id="circuitFrame" 
+            src="circuitjs.html?ctz=${currentCircuitData}&${params}"
+            width="100%" 
+            height="450">
+    </iframe>
+    
+    <p>By Paul Falstad, <a href="https://www.falstad.com/circuit" target="_blank">https://www.falstad.com/circuit</a></p>
+
 </body>
 </html>`;
                 
