@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falstad Circuit Extractor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .input-group input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .checkbox-group:hover {
+            background: #e9ecef;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            cursor: pointer;
+            user-select: none;
+            font-weight: 500;
+            color: #495057;
+            margin: 0;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
+        }
+        
+        .btn-secondary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .preview-container {
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .preview-container.active {
+            display: block;
+        }
+        
+        .preview-label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 18px;
+        }
+        
+        #previewFrame {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .status.active {
+            display: block;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            opacity: 0.9;
+        }
+        
+        .footer a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .progress-bar.active {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔌 Falstad Circuit Extractor</h1>
+            <p>Create complete offline LMS packages from circuit URLs</p>
+        </div>
+        
+        <div class="card">
+            <div class="alert alert-info">
+                <strong>📦 How it works:</strong> Enter your circuit URL below. The tool will download the Falstad simulator files, add your custom circuit, and create a complete offline package ready for LMS upload!
+            </div>
+
+            <div class="input-group">
+                <label for="circuitUrl">Falstad Circuit URL</label>
+                <input 
+                    type="text" 
+                    id="circuitUrl" 
+                    placeholder="Paste your Falstad circuit URL here (e.g., https://falstad.com/circuit/circuitjs.html?ctz=...)"
+                >
+            </div>
+            
+            <div class="input-group">
+                <label>Circuit Options</label>
+                <div class="options-grid">
+                    <div class="checkbox-group" onclick="toggleCheckbox('euroResistors')">
+                        <input type="checkbox" id="euroResistors" checked onclick="event.stopPropagation()">
+                        <label for="euroResistors">European Resistors</label>
+                    </div>
+                    <div class="checkbox-group" onclick="toggleCheckbox('whiteBackground')">
+                        <input type="checkbox" id="whiteBackground" checked onclick="event.stopPropagation()">
+                        <label for="whiteBackground">White Background</label>
+                    </div>
+                    <div class="checkbox-group" onclick="toggleCheckbox('editable')">
+                        <input type="checkbox" id="editable" onclick="event.stopPropagation()">
+                        <label for="editable">Editable</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-primary" onclick="previewCircuit()">
+                    👁️ Preview Circuit
+                </button>
+                <button class="btn-secondary" id="downloadBtn" onclick="downloadCompletePackage()" disabled>
+                    📦 Download Complete Package
+                </button>
+            </div>
+            
+            <div id="statusMessage" class="status"></div>
+            <div id="progressBar" class="progress-bar">
+                <div id="progressFill" class="progress-fill">0%</div>
+            </div>
+        </div>
+        
+        <div id="previewContainer" class="preview-container">
+            <div class="card">
+                <div class="preview-label">Circuit Preview</div>
+                <iframe id="previewFrame"></iframe>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Circuit Simulator by Paul Falstad | <a href="https://www.falstad.com/circuit" target="_blank">falstad.com/circuit</a></p>
+        </div>
+    </div>
+
+    <script>
+        let currentCircuitData = null;
+
+        function toggleCheckbox(id) {
+            const checkbox = document.getElementById(id);
+            checkbox.checked = !checkbox.checked;
+        }
+
+        function extractCircuitData(url) {
+            try {
+                const urlObj = new URL(url);
+                const params = new URLSearchParams(urlObj.search);
+                const ctz = params.get('ctz');
+                
+                if (!ctz) {
+                    throw new Error('No circuit data (ctz parameter) found in URL');
+                }
+                
+                return ctz;
+            } catch (error) {
+                throw new Error('Invalid URL format: ' + error.message);
+            }
+        }
+
+        function buildCircuitParams() {
+            const params = [];
+            
+            if (document.getElementById('euroResistors').checked) {
+                params.push('euroResistors=true');
+            }
+            
+            if (document.getElementById('whiteBackground').checked) {
+                params.push('whiteBackground=true');
+            }
+            
+            if (!document.getElementById('editable').checked) {
+                params.push('editable=false');
+            }
+            
+            return params.join('&');
+        }
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.className = 'status alert alert-' + type + ' active';
+            statusEl.textContent = message;
+        }
+
+        function updateProgress(percent, text) {
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            
+            if (percent > 0) {
+                progressBar.classList.add('active');
+                progressFill.style.width = percent + '%';
+                progressFill.textContent = text || percent + '%';
+            } else {
+                progressBar.classList.remove('active');
+            }
+        }
+
+        function previewCircuit() {
+            const urlInput = document.getElementById('circuitUrl').value.trim();
+            
+            if (!urlInput) {
+                showStatus('Please enter a Falstad circuit URL', 'error');
+                return;
+            }
+            
+            try {
+                currentCircuitData = extractCircuitData(urlInput);
+                const params = buildCircuitParams();
+                const previewUrl = `https://falstad.com/circuit/circuitjs.html?ctz=${currentCircuitData}&${params}`;
+                
+                document.getElementById('previewFrame').src = previewUrl;
+                document.getElementById('previewContainer').classList.add('active');
+                document.getElementById('downloadBtn').disabled = false;
+                
+                showStatus('Circuit loaded! Click "Download Complete Package" to create your offline LMS package.', 'success');
+            } catch (error) {
+                showStatus(error.message, 'error');
+                document.getElementById('previewContainer').classList.remove('active');
+                document.getElementById('downloadBtn').disabled = true;
+            }
+        }
+
+        async function downloadCompletePackage() {
+            if (!currentCircuitData) {
+                showStatus('Please preview the circuit first', 'error');
+                return;
+            }
+            
+            showStatus('Creating your complete offline package...', 'info');
+            updateProgress(5, 'Starting...');
+            document.getElementById('downloadBtn').disabled = true;
+            
+            try {
+                // Step 1: Download falstad.zip
+                updateProgress(10, 'Downloading Falstad files...');
+                const response = await fetch('falstad.zip');
+                
+                if (!response.ok) {
+                    throw new Error('Could not download falstad.zip. Make sure the file is uploaded to your repository.');
+                }
+                
+                const falstadZipBlob = await response.blob();
+                updateProgress(30, 'Extracting Falstad files...');
+                
+                // Step 2: Unzip falstad.zip
+                const falstadZip = await JSZip.loadAsync(falstadZipBlob);
+                updateProgress(50, 'Preparing your circuit...');
+                
+                // Step 3: Create new ZIP with custom index.html
+                const finalZip = new JSZip();
+                const params = buildCircuitParams();
+                
+                // Generate custom index.html
+                const indexHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circuit Simulation - Offline</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        #circuitFrame {
+            border: 2px solid #ccc;
+            display: block;
+            background-color: white;
+            border-radius: 8px;
+        }
+        p {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-top: 15px;
+        }
+        .info {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 Circuit Simulation</h1>
+        
+        <div class="info">
+            <strong>✅ Offline Package:</strong> This circuit runs completely offline. 
+            All Falstad simulator files are included in this package.
+        </div>
+       
+        <iframe id="circuitFrame" 
+                src="circuitjs.html?ctz=${currentCircuitData}&${params}"
+                width="100%" 
+                height="600">
+        </iframe>
+        
+        <p>Circuit Simulator by Paul Falstad | <a href="https://www.falstad.com/circuit" target="_blank">https://www.falstad.com/circuit</a></p>
+        
+        <div class="info">
+            <h3>Circuit Settings:</h3>
+            <ul>
+                <li>European Resistors: ${document.getElementById('euroResistors').checked ? 'Yes' : 'No'}</li>
+                <li>White Background: ${document.getElementById('whiteBackground').checked ? 'Yes' : 'No'}</li>
+                <li>Editable: ${document.getElementById('editable').checked ? 'Yes' : 'No'}</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>`;
+                
+                // Add custom index.html to final ZIP
+                finalZip.file('index.html', indexHtml);
+                
+                updateProgress(60, 'Adding Falstad files...');
+                
+                // Step 4: Copy all files from falstad.zip to final ZIP (at root level)
+                let fileCount = 0;
+                const fileNames = Object.keys(falstadZip.files);
+                
+                for (let i = 0; i < fileNames.length; i++) {
+                    const filename = fileNames[i];
+                    const file = falstadZip.files[filename];
+                    
+                    if (!file.dir) {
+                        const content = await file.async('blob');
+                        finalZip.file(filename, content);
+                        fileCount++;
+                        
+                        const progress = 60 + ((i / fileNames.length) * 25);
+                        updateProgress(progress, `Adding files... (${fileCount})`);
+                    }
+                }
+                
+                // Create README
+                const readme = `# Falstad Circuit Package - Offline LMS Version
+
+## Package Contents
+
+This offline package includes:
+- Custom index.html with your circuit
+- ${fileCount} Falstad simulator files
+- All necessary resources for offline operation
+
+## How to Use
+
+### For LMS Upload:
+1. Extract this entire ZIP file
+2. Upload ALL files to your LMS (maintaining folder structure if any)
+3. Set index.html as the entry point
+4. Circuit will run completely offline!
+
+### For Local Use:
+1. Extract this ZIP file
+2. Open index.html in any web browser
+3. Your circuit will load automatically from local files
+
+## Circuit Settings
+
+- European Resistors: ${document.getElementById('euroResistors').checked ? 'Enabled' : 'Disabled'}
+- White Background: ${document.getElementById('whiteBackground').checked ? 'Enabled' : 'Disabled'}
+- Editable: ${document.getElementById('editable').checked ? 'Enabled' : 'Disabled'}
+
+## Technical Details
+
+- Total files in package: ${fileCount + 2} (including index.html and README)
+- All files are at root level or in their original folders
+- No internet connection required to run
+
+## About
+
+Circuit Simulator by Paul Falstad
+https://www.falstad.com/circuit
+
+Package created by Falstad Circuit Extractor
+`;
+                
+                finalZip.file('README.txt', readme);
+                
+                updateProgress(90, 'Creating final package...');
+                
+                // Step 5: Generate and download final ZIP
+                const finalContent = await finalZip.generateAsync({
+                    type: 'blob',
+                    compression: 'DEFLATE',
+                    compressionOptions: { level: 9 }
+                });
+                
+                // Download
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(finalContent);
+                link.download = 'falstad-circuit-offline-package.zip';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+                
+                updateProgress(100, 'Complete!');
+                setTimeout(() => updateProgress(0), 3000);
+                
+                showStatus(`✅ Package created successfully! ${fileCount + 2} files included. Ready for LMS upload!`, 'success');
+                document.getElementById('downloadBtn').disabled = false;
+                
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+                updateProgress(0);
+                document.getElementById('downloadBtn').disabled = false;
+                console.error('Error details:', error);
+            }
+        }
+    </script>
+</body>
+</html>
